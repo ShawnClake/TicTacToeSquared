@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="styles.css" />
+
+    <title>TicTacToe Squared</title>
+</head>
+<body>
+<h1>Tic Tac Toe</h1>
+
+<br>
+
+<div id="board">
+    <div class="row board-row">
+        <div class=" space text-center  s00"></div>
+        <div class=" space text-center  thin-left s01"></div>
+        <div class=" space text-center  thin-left s02"></div>
+
+        <div class=" space text-center  thick-left s03"></div>
+        <div class=" space text-center  thin-left s04"></div>
+        <div class=" space text-center  thin-left s05"></div>
+
+        <div class=" space text-center  thick-left s06"></div>
+        <div class=" space text-center  thin-left s07"></div>
+        <div class=" space text-center  thin-left s08"></div>
+    </div>
+
+    <div class="row board-row thin-top">
+        <div class=" space text-center  s10"></div>
+        <div class=" space text-center  thin-left s11"></div>
+        <div class=" space text-center  thin-left s12"></div>
+
+        <div class=" space text-center  thick-left s13"></div>
+        <div class=" space text-center  thin-left s14"></div>
+        <div class=" space text-center  thin-left s15"></div>
+
+        <div class=" space text-center  thick-left s16"></div>
+        <div class=" space text-center  thin-left s17"></div>
+        <div class=" space text-center  thin-left s18"></div>
+    </div>
+
+    <div class="row board-row thin-top">
+        <div class=" space text-center  s20"></div>
+        <div class=" space text-center  thin-left s21"></div>
+        <div class=" space text-center  thin-left s22"></div>
+
+        <div class=" space text-center  thick-left s23"></div>
+        <div class=" space text-center  thin-left s24"></div>
+        <div class=" space text-center  thin-left s25"></div>
+
+        <div class=" space text-center  thick-left s26"></div>
+        <div class=" space text-center  thin-left s27"></div>
+        <div class=" space text-center  thin-left s28"></div>
+    </div>
+
+    <div class="row board-row thick-top">
+        <div class=" space text-center  s30"></div>
+        <div class=" space text-center  thin-left s31"></div>
+        <div class=" space text-center  thin-left s32"></div>
+
+        <div class=" space text-center  thick-left s33"></div>
+        <div class=" space text-center  thin-left s34"></div>
+        <div class=" space text-center  thin-left s35"></div>
+
+        <div class=" space text-center  thick-left s36"></div>
+        <div class=" space text-center  thin-left s37"></div>
+        <div class=" space text-center  thin-left s38"></div>
+    </div>
+
+    <div class="row board-row thin-top">
+        <div class=" space text-center  s40"></div>
+        <div class=" space text-center  thin-left s41"></div>
+        <div class=" space text-center  thin-left s42"></div>
+
+        <div class=" space text-center  thick-left s43"></div>
+        <div class=" space text-center  thin-left s44"></div>
+        <div class=" space text-center  thin-left s45"></div>
+
+        <div class=" space text-center  thick-left s46"></div>
+        <div class=" space text-center  thin-left s47"></div>
+        <div class=" space text-center  thin-left s48"></div>
+    </div>
+
+    <div class="row board-row thin-top">
+        <div class=" space text-center  s50"></div>
+        <div class=" space text-center  thin-left s51"></div>
+        <div class=" space text-center  thin-left s52"></div>
+
+        <div class=" space text-center  thick-left s53"></div>
+        <div class=" space text-center  thin-left s54"></div>
+        <div class=" space text-center  thin-left s55"></div>
+
+        <div class=" space text-center  thick-left s56"></div>
+        <div class=" space text-center  thin-left s57"></div>
+        <div class=" space text-center  thin-left s58"></div>
+    </div>
+
+    <div class="row board-row thick-top">
+        <div class=" space text-center  s60"></div>
+        <div class=" space text-center  thin-left s61"></div>
+        <div class=" space text-center  thin-left s62"></div>
+
+        <div class=" space text-center  thick-left s63"></div>
+        <div class=" space text-center  thin-left s64"></div>
+        <div class=" space text-center  thin-left s65"></div>
+
+        <div class=" space text-center  thick-left s66"></div>
+        <div class=" space text-center  thin-left s67"></div>
+        <div class=" space text-center  thin-left s68"></div>
+    </div>
+
+    <div class="row board-row thin-top">
+        <div class=" space text-center  s70"></div>
+        <div class=" space text-center  thin-left s71"></div>
+        <div class=" space text-center  thin-left s72"></div>
+
+        <div class=" space text-center  thick-left s73"></div>
+        <div class=" space text-center  thin-left s74"></div>
+        <div class=" space text-center  thin-left s75"></div>
+
+        <div class=" space text-center  thick-left s76"></div>
+        <div class=" space text-center  thin-left s77"></div>
+        <div class=" space text-center  thin-left s78"></div>
+    </div>
+
+    <div class="row board-row thin-top">
+        <div class=" space text-center  s80"></div>
+        <div class=" space text-center  thin-left s81"></div>
+        <div class=" space text-center  thin-left s82"></div>
+
+        <div class=" space text-center  thick-left s83"></div>
+        <div class=" space text-center  thin-left s84"></div>
+        <div class=" space text-center  thin-left s85"></div>
+
+        <div class=" space text-center  thick-left s86"></div>
+        <div class=" space text-center  thin-left s87"></div>
+        <div class=" space text-center  thin-left s88"></div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script src="ai.js"></script>
+</body>
+</html>
