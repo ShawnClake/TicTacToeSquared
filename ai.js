@@ -16,6 +16,8 @@ let wins = [];
 // 2 -> Look ahead
 let difficulty = 1;
 
+let playing = false;
+
 // The possible victory conditions of a single tic tac toe game
 let conditions = [
   [0, 3, 6],
@@ -164,7 +166,7 @@ function draw() {
       // Adds the correct styles to the place
 
       // If a spot if playable, and no one has played on it
-      if (place.playable && place.player === null) {
+      if (place.playable && place.player === null && playing) {
         clazz.addClass("playable");
 
         // If a spot has been occupied by the human
@@ -210,6 +212,7 @@ function prepare() {
   }
 
   updateStatus("It's your turn");
+  playing = true;
 }
 
 /**
@@ -458,9 +461,9 @@ function restart() {
  * @param winner
  */
 function gameOver(winner) {
-  alert("GAME OVER");
+  playing = false;
   updateStatus("GAME OVER, Hit restart to play again");
-  restart();
+  //restart();
 }
 
 /**
@@ -503,6 +506,10 @@ function updateStatus(status)
  * @param y 0-8
  */
 function makeMove(x, y) {
+  if(!playing)
+  {
+    return;
+  }
 
   let place = getPlace(x, y);
 
@@ -545,16 +552,17 @@ function makeMove(x, y) {
     }
   }
 
-  // Draw the board to the DOM
-  draw();
-
   // Check whether a game was just won
   let gameWinner = checkGameWin();
   if (gameWinner.player !== null) {
     // If a game was run, execute game over and stop the move making process
-    setTimeout(gameOver(gameWinner), 500);
+    gameOver(gameWinner);
+    draw();
     return;
   }
+
+  // Draw the board to the DOM
+  draw();
 
   // If we the human just took their turn
   if (playerTurn !== 1) {
