@@ -54,6 +54,6 @@
     background-color: purple;
 }
 
-.dead {
-    background-color:grey;
+.won {
+    filter: brightness(60%);
 }
