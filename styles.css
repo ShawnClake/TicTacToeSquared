@@ -34,7 +34,7 @@
 }
 
 .playable {
-    background-color: green;
+    background-color: #79E784;
 }
 
 .playable:hover {
@@ -43,17 +43,17 @@
 }
 
 .unplayable {
-    background-color: red;
+    background-color: white;
 }
 
 .player1 {
-    background-color: blue;
+    background-color: #79B4E7;
 }
 
 .player2 {
-    background-color: purple;
+    background-color: #E78B79;
 }
 
 .won {
-    filter: brightness(60%);
+    filter: brightness(75%);
 }
