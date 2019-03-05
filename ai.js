@@ -14,7 +14,7 @@ let wins = [];
 // 0 -> Random placement
 // 1 -> Tries to win current square
 // 2 -> Look ahead
-let difficulty = 0;
+let difficulty = 1;
 
 // The possible victory conditions of a single tic tac toe game
 let conditions = [
@@ -99,6 +99,28 @@ function getQuadPlace(quadX, quadY, xOffset, yOffset) {
  */
 function getQuadPlaceByOffset(quadX, quadY, offset) {
   return getPlace(quadX * 3 + Math.floor(offset / 3), quadY * 3 + offset % 3);
+}
+
+/**
+ * Gets the quad index based on the board coordinate
+ * @param index
+ */
+function getQuadIndexFromBoardCoord(index)
+{
+  let x = Math.floor(Math.floor(index / 9) / 3);
+  let y = Math.floor(Math.floor(index % 9) / 3);
+
+  return parseInt("" + x + y);
+}
+
+/**
+ * Returns a board coordinate given a quad coordinate and an offset
+ * @param quadX 0-2
+ * @param quadY 0-2
+ * @param offset 0-8
+ */
+function getBoardCoordFromQuadOffset(quadX, quadY, offset) {
+  return (quadX * 3 + Math.floor(offset / 3)) * boardSize + (quadY * 3 + offset % 3);
 }
 
 /**
@@ -256,10 +278,11 @@ function checkTicTacToeWin(subBoard) {
 }
 
 /**
- * Easy AI
- * Randomly places in a playable place
+ * Returns a list of playable spots on the board
+ * @returns {Array}
  */
-function ai0() {
+function getPlayables()
+{
   let i = 0;
   let playable = [];
   for (i = 0; i < board.length; i++) {
@@ -267,6 +290,90 @@ function ai0() {
       playable.push(i);
     }
   }
+  return playable;
+}
+
+/**
+ * Evaluates a sub-board for the best play
+ * @param quadX
+ * @param quadY
+ * @param subBoard
+ * @returns {*}
+ */
+function evaluation(quadX, quadY, subBoard)
+{
+  // If the board has already been won, then it doesnt matter where we play for a 1 block look ahead
+  if(getBoardWin(quadX, quadY).player !== null)
+  {
+    return {
+      value: 0
+    };
+  }
+
+  let bestIndex = null;
+  let values = [];
+
+  // Start with messing up the human
+  let i = 0;
+  for(i = 0; i < subBoard.length; i++)
+  {
+    if(subBoard[i].player === null)
+    {
+      subBoard[i].player = 0;
+      let win = checkTicTacToeWin(subBoard);
+      subBoard[i].player = null;
+      if(win.player !== null)
+      {
+        bestIndex = 1;
+        values.push(i)
+      }
+    }
+  }
+
+  // Then see if its actually better to just win the square
+  for(i = 0; i < subBoard.length; i++)
+  {
+    if(subBoard[i].player === null)
+    {
+      subBoard[i].player = 1;
+      let win = checkTicTacToeWin(subBoard);
+      subBoard[i].player = null;
+      if(win.player !== null)
+      {
+        if(bestIndex < 2)
+        {
+          values = [];
+        }
+        bestIndex = 2;
+        values.push(i)
+      }
+    }
+  }
+
+  // If there is no spot to play that is advantageous, then return 0 to indicate that any place is okay
+  if(values.length === 0)
+  {
+    return {
+      value: 0,
+    }
+  }
+
+  // If there are advantageous spots, then return a random one from the list
+  let place = values[Math.floor(Math.random() * values.length)];
+  place = getBoardCoordFromQuadOffset(quadX, quadY, place);
+
+  return {
+    value: bestIndex,
+    placeIndex: place
+  };
+}
+
+/**
+ * Easy AI
+ * Randomly places in a playable place
+ */
+function ai0() {
+  let playable = getPlayables();
 
   let choice = Math.floor(Math.random() * playable.length);
   makeMove(Math.floor(playable[choice] / boardSize), Math.floor(playable[choice] % boardSize));
@@ -277,7 +384,56 @@ function ai0() {
  * Attempts to win the given tic-tac-toe game
  */
 function ai1() {
-  ai0();
+  // Get all of the playable areas
+  let playable = getPlayables();
+
+  // List of analyzed squares
+  let analyzedQuads = [];
+
+  // Contains the best placements
+  let places = [];
+  let bestValue = 0;
+
+  // Loop through the playables
+  let i = 0;
+  for(i = 0; i < playable.length; i++)
+  {
+    let quadIndex = getQuadIndexFromBoardCoord(playable[i]);
+
+    // If we havent analyzed the quadrant where the playable place is
+    if(!analyzedQuads.includes(quadIndex))
+    {
+      let quadX = Math.floor(Math.floor(playable[i] / 9) / 3);
+      let quadY = Math.floor(Math.floor(playable[i] % 9) / 3);
+
+      // Determine the best placements in that quadrant
+      let result = evaluation(quadX, quadY, getSubBoard(quadX, quadY));
+      if(result.value > 0 && result.value >= bestValue)
+      {
+        if(result.value > bestValue)
+        {
+          places = [];
+        }
+        bestValue = result.value;
+        places.push(result.placeIndex);
+      }
+
+      analyzedQuads.push(quadIndex);
+    }
+  }
+
+  console.log(places);
+
+  // If no good placements were found
+  if(places.length === 0)
+  {
+    ai0();
+
+    // If a good placement was found
+  } else {
+    let place = places[Math.floor(Math.random() * places.length)];
+    makeMove(Math.floor(place / boardSize), Math.floor(place % boardSize));
+  }
 }
 
 /**
@@ -396,7 +552,7 @@ function makeMove(x, y) {
   let gameWinner = checkGameWin();
   if (gameWinner.player !== null) {
     // If a game was run, execute game over and stop the move making process
-    gameOver(gameWinner);
+    setTimeout(gameOver(gameWinner), 500);
     return;
   }
 
@@ -407,13 +563,19 @@ function makeMove(x, y) {
     // Lets the AI take their turn with a 2s delay
     if(difficulty === 0)
     {
-      setTimeout(ai0, 2000);
+      setTimeout(function() {
+        ai0()
+      }, 2000);
     } else if(difficulty === 1)
     {
-      setTimeout(ai1, 2000);
+      setTimeout(function() {
+        ai1()
+      }, 2000);
     } else if(difficulty === 2)
     {
-      setTimeout(ai2, 2000);
+      setTimeout(function() {
+        ai2()
+      }, 2000);
     }
 
   } else {
