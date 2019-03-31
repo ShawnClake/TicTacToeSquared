@@ -107,8 +107,7 @@ function getQuadPlaceByOffset(quadX, quadY, offset) {
  * Gets the quad index based on the board coordinate
  * @param index
  */
-function getQuadIndexFromBoardCoord(index)
-{
+function getQuadIndexFromBoardCoord(index) {
   let x = Math.floor(Math.floor(index / 9) / 3);
   let y = Math.floor(Math.floor(index % 9) / 3);
 
@@ -284,8 +283,7 @@ function checkTicTacToeWin(subBoard) {
  * Returns a list of playable spots on the board
  * @returns {Array}
  */
-function getPlayables()
-{
+function getPlayables() {
   let i = 0;
   let playable = [];
   for (i = 0; i < board.length; i++) {
@@ -303,59 +301,36 @@ function getPlayables()
  * @param subBoard
  * @returns {*}
  */
-function evaluation(quadX, quadY, subBoard)
-{
+function evaluation(quadX, quadY, subBoard) {
   // If the board has already been won, then it doesnt matter where we play for a 1 block look ahead
-  if(getBoardWin(quadX, quadY).player !== null)
-  {
+  if (getBoardWin(quadX, quadY).player !== null) {
     return {
       value: 0
     };
   }
 
-  let bestIndex = null;
+  let bestIndex = 0;
   let values = [];
 
   // Start with messing up the human
   let i = 0;
-  for(i = 0; i < subBoard.length; i++)
-  {
-    if(subBoard[i].player === null)
-    {
-      subBoard[i].player = 0;
-      let win = checkTicTacToeWin(subBoard);
-      subBoard[i].player = null;
-      if(win.player !== null)
+  for (i = 0; i < subBoard.length; i++) {
+    if (subBoard[i].player === null) {
+      let value = evaluatePlace(turn % 2, i, quadX, quadY, subBoard);
+      if(value > bestIndex)
       {
-        bestIndex = 1;
-        values.push(i)
+        values = [i];
+        bestIndex = value;
+      } else if(value === bestIndex)
+      {
+        values.push(i);
       }
     }
   }
 
-  // Then see if its actually better to just win the square
-  for(i = 0; i < subBoard.length; i++)
-  {
-    if(subBoard[i].player === null)
-    {
-      subBoard[i].player = 1;
-      let win = checkTicTacToeWin(subBoard);
-      subBoard[i].player = null;
-      if(win.player !== null)
-      {
-        if(bestIndex < 2)
-        {
-          values = [];
-        }
-        bestIndex = 2;
-        values.push(i)
-      }
-    }
-  }
 
   // If there is no spot to play that is advantageous, then return 0 to indicate that any place is okay
-  if(values.length === 0)
-  {
+  if (values.length === 0) {
     return {
       value: 0,
     }
@@ -367,8 +342,141 @@ function evaluation(quadX, quadY, subBoard)
 
   return {
     value: bestIndex,
-    placeIndex: place
+    place: place
   };
+}
+
+/**
+ * Evaluates a sub-board for all of the plays
+ * @param player
+ * @param quadX
+ * @param quadY
+ * @param subBoard
+ * @returns {*}
+ */
+function fullEvaluation(quadX, quadY, subBoard) {
+
+  let places = {};
+  let i = 0;
+  for (i = 0; i < subBoard.length; i++) {
+    if (subBoard[i].player === null) {
+      places[i] = 0;
+    }
+  }
+
+  // Evaluate the worthness of blocking or winning a square if the square has not yet been won
+  if (getBoardWin(quadX, quadY).player === null) {
+    // Start with messing up the human
+    for (i = 0; i < subBoard.length; i++) {
+      if (subBoard[i].player === null) {
+        places[i] = evaluatePlace(turn % 2, i, quadX, quadY, subBoard);
+      }
+    }
+  }
+
+  let fixedPlaces = {};
+  Object.keys(places).forEach(function(place) {
+    fixedPlaces[getBoardCoordFromQuadOffset(quadX, quadY, place)] = places[place];
+  });
+
+  return fixedPlaces;
+}
+
+/**
+ * Does the math to determine whether a place is a good move
+ * @param player
+ * @param place
+ * @param quadX
+ * @param quadY
+ * @param subBoard
+ * @returns {number}
+ */
+function evaluatePlace(player, place, quadX, quadY, subBoard)
+{
+  let value = 0;
+
+  /**
+   * Tic tac toe reference board:
+   * 0 1 2
+   * 3 4 5
+   * 6 7 8
+   */
+  if (getBoardWin(quadX, quadY).player === null) {
+
+    let opponent = (player + 1) % 2;
+
+    let i = 0;
+    // Loop through each possible victory condition and see how much placing here will help
+    for (i = 0; i < conditions.length; i++) {
+      let condition = conditions[i];
+      if(condition.includes(place))
+      {
+        let j = 0;
+        let placed = []; // Represents the current placed pieces in the chosen victory condition
+        for(j=0;j<3;j++)
+        {
+          placed[j] = subBoard[condition[j]];
+        }
+        let isPlayer = false, isOpponent = false;
+        for(j=0;j<3;j++)
+        {
+          if(placed[j].player === player)
+          {
+            isPlayer = true;
+          } else if(placed[j].player === opponent)
+          {
+            isOpponent = true;
+          }
+        }
+
+        if(isPlayer && !isOpponent)
+        {
+          value++;
+        } else if(isOpponent)
+        {
+          value -= 1;
+        }
+      }
+    }
+
+    // Take the middle spot if its open
+    if(place === 4)
+    {
+        value = 4
+    }
+
+    // Blocking a player in a square
+    subBoard[place].player = opponent;
+    let win = checkTicTacToeWin(subBoard);
+    subBoard[place].player = null;
+    if (win.player !== null) {
+      value = 5;
+    }
+
+
+    // Winning a square
+    subBoard[place].player = player;
+    win = checkTicTacToeWin(subBoard);
+    subBoard[place].player = null;
+    if (win.player !== null) {
+      value = 10;
+    }
+
+  }
+
+  return value;
+}
+
+function evaluateGlobalPlace(player, place)
+{
+  let quadIndex = getQuadIndexFromBoardCoord(place);
+
+  let quadX = Math.floor(Math.floor(place / 9) / 3);
+  let quadY = Math.floor(Math.floor(place % 9) / 3);
+
+  let subboard = getSubBoard(quadX, quadY);
+
+  return evaluatePlace(player, quadIndex, quadX, quadY, subboard);
 }
 
 /**
@@ -376,10 +484,14 @@ function evaluation(quadX, quadY, subBoard)
  * Randomly places in a playable place
  */
 function ai0() {
-  let playable = getPlayables();
+  let choice = ai0Evaluation();
+  makeMove(Math.floor(choice / boardSize), Math.floor(choice % boardSize));
+}
 
-  let choice = Math.floor(Math.random() * playable.length);
-  makeMove(Math.floor(playable[choice] / boardSize), Math.floor(playable[choice] % boardSize));
+function ai0Evaluation()
+{
+  let playable = getPlayables();
+  return playable[Math.floor(Math.random() * playable.length)];
 }
 
 /**
@@ -387,6 +499,26 @@ function ai0() {
  * Attempts to win the given tic-tac-toe game
  */
 function ai1() {
+  let places = ai1Evaluation().places;
+
+  console.log(places);
+
+  // If no good placements were found
+  if (places.length === 0) {
+    ai0();
+
+    // If a good placement was found
+  } else {
+    let place = places[Math.floor(Math.random() * places.length)];
+    makeMove(Math.floor(place / boardSize), Math.floor(place % boardSize));
+  }
+}
+
+/**
+ * Evaluates the best places for AI1
+ * @returns {{places: Array, value: number}}
+ */
+function ai1Evaluation() {
   // Get all of the playable areas
   let playable = getPlayables();
 
@@ -399,44 +531,33 @@ function ai1() {
 
   // Loop through the playables
   let i = 0;
-  for(i = 0; i < playable.length; i++)
-  {
+  for (i = 0; i < playable.length; i++) {
     let quadIndex = getQuadIndexFromBoardCoord(playable[i]);
 
     // If we havent analyzed the quadrant where the playable place is
-    if(!analyzedQuads.includes(quadIndex))
-    {
+    if (!analyzedQuads.includes(quadIndex)) {
       let quadX = Math.floor(Math.floor(playable[i] / 9) / 3);
       let quadY = Math.floor(Math.floor(playable[i] % 9) / 3);
 
       // Determine the best placements in that quadrant
       let result = evaluation(quadX, quadY, getSubBoard(quadX, quadY));
-      if(result.value > 0 && result.value >= bestValue)
-      {
-        if(result.value > bestValue)
-        {
+      if (result.value > 0 && result.value >= bestValue) {
+        if (result.value > bestValue) {
           places = [];
         }
         bestValue = result.value;
-        places.push(result.placeIndex);
+        places.push(result.place);
       }
 
       analyzedQuads.push(quadIndex);
     }
   }
 
-  console.log(places);
+  return {places: places, value: bestValue};
+}
 
-  // If no good placements were found
-  if(places.length === 0)
-  {
-    ai0();
-
-    // If a good placement was found
-  } else {
-    let place = places[Math.floor(Math.random() * places.length)];
-    makeMove(Math.floor(place / boardSize), Math.floor(place % boardSize));
-  }
+function copyBoard(myBoard) {
+  return JSON.parse(JSON.stringify(myBoard));
 }
 
 /**
@@ -444,7 +565,135 @@ function ai1() {
  * Incorporates a look ahead to try and make a good move
  */
 function ai2() {
-  ai0();
+  let backupBoard = copyBoard(board);
+  let backupTurn = turn;
+
+  let places = {};
+
+
+  // Get all of the playable areas
+  let playable = getPlayables();
+
+  // List of analyzed squares
+  let analyzedQuads = [];
+
+  /**
+   * Initial setup of places
+   */
+  // Loop through the playables
+  let i = 0;
+  for (i = 0; i < playable.length; i++) {
+    let quadIndex = getQuadIndexFromBoardCoord(playable[i]);
+
+    // If we havent analyzed the quadrant where the playable place is
+    if (!analyzedQuads.includes(quadIndex)) {
+      let quadX = Math.floor(Math.floor(playable[i] / 9) / 3);
+      let quadY = Math.floor(Math.floor(playable[i] % 9) / 3);
+
+      // Determine the placements in that quadrant
+      let newPlaces = fullEvaluation(quadX, quadY, getSubBoard(quadX, quadY));
+
+      places = {...places, ...newPlaces};
+    }
+  }
+
+  /**
+   * Applies a look ahead to the found places to modify their weights
+   */
+  let lookAhead = 1;
+
+  Object.keys(places).forEach(function(place) {
+    board = null;
+    board = copyBoard(backupBoard);
+    turn = backupTurn;
+
+    let value = places[place];
+
+    // Sets the values to the place on the board for the made move
+    let x = Math.floor(place / boardSize);
+    let y = Math.floor(place % boardSize);
+    let boardPlace = getPlace(x, y);
+    boardPlace.playable = false;
+    boardPlace.player = 1;
+    boardPlace.turn = turn;
+
+    turn++;
+
+    // Updates which spots are playable on the board
+    preparePlayables(x, y);
+
+    for (i = 0; i < lookAhead; i++) {
+      // When playerTurn is 0, its the humans turn, when its 1, its the AI's turn
+      let playerTurn = turn % 2;
+      let coefficient = 1;
+      if (playerTurn === 0) {
+        coefficient = -1;
+      }
+
+      // Sets the values to the place on the board for the made move
+      let nextMoves = ai1Evaluation();
+      let lookAheadPlace = null;
+      if(nextMoves.places.length === 0)
+      {
+        lookAheadPlace = ai0Evaluation();
+      } else {
+        lookAheadPlace = nextMoves.places[Math.floor(Math.random() * nextMoves.places.length)];
+      }
+
+      let x = Math.floor(lookAheadPlace / boardSize);
+      let y = Math.floor(lookAheadPlace % boardSize);
+      let boardPlace = getPlace(x, y);
+      boardPlace.playable = false;
+      boardPlace.player = playerTurn;
+      boardPlace.turn = turn;
+      turn++;
+
+      // Updates which spots are playable on the board
+      preparePlayables(x, y);
+
+      let weight = 1.8 / (i + 2);
+      places[place] = value + (coefficient * weight * nextMoves.value);
+
+      turn += 1;
+    }
+  });
+
+  /**
+   * Finds the best places
+   */
+  let bestPlaces = [];
+  let bestValue = -1000;
+  Object.keys(places).forEach(function(place) {
+    let value = places[place];
+    if(value > bestValue)
+    {
+      bestPlaces = [place];
+      bestValue = value;
+    } else if(value === bestValue)
+    {
+      bestPlaces.push(place);
+    }
+  });
+
+
+  // Resetting board and turn state to make a move
+  board = null;
+  board = copyBoard(backupBoard);
+  backupBoard = null;
+  turn = backupTurn;
+
+  console.log(places);
+  console.log(bestPlaces);
+  // If no good placements were found
+  if (places.length === 0) {
+    ai0();
+  } else {
+
+    // If a good placement was found
+    let bestMove = bestPlaces[Math.floor(Math.random() * bestPlaces.length)];
+    makeMove(Math.floor(bestMove / boardSize), Math.floor(bestMove % boardSize))
+  }
+
 }
 
 /**
@@ -495,8 +744,7 @@ function checkGameWin() {
  * Updates the status text on the game UI
  * @param status
  */
-function updateStatus(status)
-{
+function updateStatus(status) {
   $("#status").html(status);
 }
 
@@ -506,8 +754,7 @@ function updateStatus(status)
  * @param y 0-8
  */
 function makeMove(x, y) {
-  if(!playing)
-  {
+  if (!playing) {
     return;
   }
 
@@ -569,19 +816,16 @@ function makeMove(x, y) {
     updateStatus("The AI is taking its turn");
 
     // Lets the AI take their turn with a 2s delay
-    if(difficulty === 0)
-    {
-      setTimeout(function() {
+    if (difficulty === 0) {
+      setTimeout(function () {
         ai0()
       }, 2000);
-    } else if(difficulty === 1)
-    {
-      setTimeout(function() {
+    } else if (difficulty === 1) {
+      setTimeout(function () {
         ai1()
       }, 2000);
-    } else if(difficulty === 2)
-    {
-      setTimeout(function() {
+    } else if (difficulty === 2) {
+      setTimeout(function () {
         ai2()
       }, 2000);
     }
@@ -612,7 +856,7 @@ $(document).ready(function () {
   });
 
   // Adds a click handler for the restart button
-  $("#restart").click(function() {
+  $("#restart").click(function () {
     let playerTurn = turn % 2;
     if (playerTurn !== 0) {
       alert("Please wait until your turn to restart");
