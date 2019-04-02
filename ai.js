@@ -14,7 +14,7 @@ let wins = [];
 // 0 -> Random placement
 // 1 -> Tries to win current square
 // 2 -> Look ahead
-let difficulty = 1;
+let difficulty = 2;
 
 let playing = false;
 
@@ -802,7 +802,7 @@ function makeMove(x, y) {
   // Check whether a game was just won
   let gameWinner = checkGameWin();
   if (gameWinner.player !== null) {
-    // If a game was run, execute game over and stop the move making process
+    // If a game was won, execute game over and stop the move making process
     gameOver(gameWinner);
     draw();
     return;
