@@ -14,9 +14,13 @@ let wins = [];
 // 0 -> Random placement
 // 1 -> Tries to win current square
 // 2 -> Look ahead
-let difficulty = 2;
+let difficulty = 1;
 
+// Whether or not the game is in progress
 let playing = false;
+
+// Applies a look ahead to the found places to modify their weights
+let lookAhead = 1;
 
 // The possible victory conditions of a single tic tac toe game
 let conditions = [
@@ -467,6 +471,12 @@ function evaluatePlace(player, place, quadX, quadY, subBoard)
   return value;
 }
 
+/**
+ * Evaluates the worthness of a place based on a global coordinate
+ * @param player
+ * @param place
+ * @returns {number}
+ */
 function evaluateGlobalPlace(player, place)
 {
   let quadIndex = getQuadIndexFromBoardCoord(place);
@@ -488,6 +498,10 @@ function ai0() {
   makeMove(Math.floor(choice / boardSize), Math.floor(choice % boardSize));
 }
 
+/**
+ * Random placement evaluation
+ * @returns {*}
+ */
 function ai0Evaluation()
 {
   let playable = getPlayables();
@@ -556,6 +570,11 @@ function ai1Evaluation() {
   return {places: places, value: bestValue};
 }
 
+/**
+ * Deep copy of the passed in board
+ * @param myBoard
+ * @returns {any}
+ */
 function copyBoard(myBoard) {
   return JSON.parse(JSON.stringify(myBoard));
 }
@@ -596,11 +615,6 @@ function ai2() {
       places = {...places, ...newPlaces};
     }
   }
-
-  /**
-   * Applies a look ahead to the found places to modify their weights
-   */
-  let lookAhead = 1;
 
   Object.keys(places).forEach(function(place) {
     board = null;
@@ -716,10 +730,13 @@ function gameOver(winner) {
 }
 
 /**
- * When no moves are left to be made, this method is called
+ * When a game is a tie, end the game
+ * @param winner
  */
-function tie() {
-
+function tieGame() {
+  playing = false;
+  updateStatus("GAME OVER, It's a tie!");
+  //restart();
 }
 
 /**
@@ -808,6 +825,13 @@ function makeMove(x, y) {
     return;
   }
 
+  if (getPlayables().length === 0)
+  {
+    tieGame();
+    draw();
+    return;
+  }
+
   // Draw the board to the DOM
   draw();
 
@@ -863,5 +887,29 @@ $(document).ready(function () {
       return;
     }
     restart();
+  });
+
+  // Difficulty buttons
+  $('input[type=radio][name=optradio]').change(function() {
+    if(this.value === 'easy')
+    {
+      difficulty = 0;
+    } else if(this.value === 'medium')
+    {
+      difficulty = 1;
+    } else if(this.value === 'hard')
+    {
+      difficulty = 2;
+    }
+  });
+
+  // Look ahead stages
+  $('#lookahead').change(function() {
+    lookAhead = this.value;
+    if(lookAhead > 7)
+    {
+      lookAhead = 7;
+      this.value = 7;
+    }
   });
 });
