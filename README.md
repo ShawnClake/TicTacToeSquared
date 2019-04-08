@@ -1,2 +1,3 @@
 # TicTacToeSquared
-Project for an AI class
+
+A fully functional game with AI
